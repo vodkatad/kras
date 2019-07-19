@@ -490,7 +490,7 @@ while not done:
         if mut_count[k] == WANTED:
             print("KRAS\t%d\t%d" % (k, mut_count[k]))
             seen += 1
-        elif mut_count[k] >= WANTED:
+        elif mut_count[k] > WANTED:
             if seen != 0:
                 done = True
             else:

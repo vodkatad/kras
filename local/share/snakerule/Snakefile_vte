@@ -2,7 +2,7 @@ include: "conf.sk"
 #(base) grassi@philae:~/vte/local/src/VirtualTumorEvolution$ /usr/bin/time -v python2 3DTumorSimul_MultiRegionSeq.py 5000 0.6 0.00001 0.1 4 &> real_deme_findKRAS.log
 rule simulation:
 	params: deme=NDEME, mutr=MUT_RATE, advr=ADV_RATE, sel=SEL_COEF, tool=TOOL
-	output: maf="simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", info="{n}.log"
+	output: maf="simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", info="{n}.siminfo"
 	shell:
 		"""
 			{params.tool} {params.deme} {params.mutr} {params.advr} {params.sel} {wildcards.n} 
@@ -11,5 +11,24 @@ rule simulation:
 
 rule all_simulations:
 	input: expand("simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", n=range(0, NSIM))
+	shell:
+		"""
+			mkdir -p sims
+			mv simulMRS_deme* sims
+			mv *.siminfo sims
+		"""
 
-#tr -s " " "\t" <  simulMRS_deme5000_s10percent_8samples_u0.6_7.txt | cut -f 1 | grep -w -f look_for_KRAS
+
+rule sim_summary:
+	input: maf="sims/simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", info="sims/{n}.siminfo"
+	output: sum="{n}.summary", maf="{n}_kras.maf"
+	shell:
+		"""
+			grep -w KRAS {input.info} | cut -f 2 | sort | uniq > {output.sum}.tmp
+			cat {output.sum}.tmp | wc -l | bawk '{{print "starting", $1}}' > {output.sum}
+			tr -s " " "\t" <  {} | cut -f 1 | filter_1col 1 {output}.tmp > {output.sum}.tmp2
+			cat {output.sum}.tmp2 | wc -l | bawk '{{print "ending", $1}}' >> {output.sum}
+			cut -f 1,2,4,6,8,10,12,14,16,18 > {output.maf}
+			rm {output.sum}.tmp2 {output.sum}.tmp
+			
+		"""
