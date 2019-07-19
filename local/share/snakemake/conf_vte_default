@@ -1,0 +1,23 @@
+import os
+def find_prj_root(path=os.getcwd()):
+	if os.path.isfile(os.path.join(path,".PRJ_ROOT")):
+		return path
+	else:
+		if path:
+			return find_prj_root(os.path.dirname(path))
+		else:
+			raise Exception("Can not find the PRJ_ROOT directory")
+
+
+PRJ_ROOT=find_prj_root()
+                                                    
+DATA=PRJ_ROOT+"/local/share/data"
+BIN_DIR=PRJ_ROOT+"/local/bin"
+
+TOOL=BIN_DIR+"/vte_default"
+
+NSIM=100
+NDEME="5000"
+MUT_RATE="0.6"
+ADV_RATE="0.00001"
+SEL_COEF="0.1"

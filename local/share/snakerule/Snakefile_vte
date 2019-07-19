@@ -1,0 +1,15 @@
+include: "conf.sk"
+#(base) grassi@philae:~/vte/local/src/VirtualTumorEvolution$ /usr/bin/time -v python2 3DTumorSimul_MultiRegionSeq.py 5000 0.6 0.00001 0.1 4 &> real_deme_findKRAS.log
+rule simulation:
+	params: deme=NDEME, mutr=MUT_RATE, advr=ADV_RATE, sel=SEL_COEF, tool=TOOL
+	output: maf="simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", info="{n}.log"
+	shell:
+		"""
+			{params.tool} {params.deme} {params.mutr} {params.advr} {params.sel} {wildcards.n} 
+		"""
+
+
+rule all_simulations:
+	input: expand("simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", n=range(0, NSIM))
+
+#tr -s " " "\t" <  simulMRS_deme5000_s10percent_8samples_u0.6_7.txt | cut -f 1 | grep -w -f look_for_KRAS

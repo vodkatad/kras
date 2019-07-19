@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python2
 
 ###################################################################################
 ## A Python script to simulate 3D tumor growth and multi-region sequencing data  ##
@@ -297,7 +297,7 @@ def ddPCRProcessing(sp,sample_keys,mlineage,size_par,mean_depth,purity):
     sampleAF = {}                                       # a dictionary storing the mutation IDs and corresponding depth and allele frequency the seq data
     for x in mut_count.keys():
         true_af = mut_count[x]*0.5*purity/sample_size   # the true allele frequency in the sample
-        if true_af > 0.00001:                             # filter mutations with very low frequency that is not detectable by ~100X sequencing depth
+        if true_af > 0: # > 0.00001:                             # filter mutations with very low frequency that is not detectable by ~100X sequencing depth
             # vodka TODO change these hard limits...or clone this function for ddPCR
             site_depth = np.random.negative_binomial(size_par,prob_par)
             if site_depth >= 0:                        # seq depth cutoff for "calling" a mutation
@@ -482,20 +482,31 @@ nmin =  min(mut_count.values())
 nmax =  max(mut_count.values())
 print("max mut cells: %d" % max(mut_count.values()))
 print("min mut cells: %d" % min(mut_count.values()))
-
-KRASmut = -1
-for k in mut_count.keys():
-    if mut_count[k] == nmin:
-        KRASmut = k
-        break
+WANTED=5
+done = False
+seen = 0 
+while not done:
+    for k in mut_count.keys():
+        if mut_count[k] == WANTED:
+            print("KRAS\t%d\t%d" % (k, mut_count[k]))
+            seen += 1
+        elif mut_count[k] >= WANTED:
+            if seen != 0:
+                done = True
+            else:
+                print("KRAS\t%d\t%d" % (k, mut_count[k]))
+                seen += 1
+    WANTED += 1
+                    
+                
     
-            
-print("KRAS\t%d" % KRASmut)
 ncells = len(muts)
 min_mut_af = nmin * 0.5 / ncells
 max_mut_af = nmax * 0.5 / ncells
+w_mut_af = WANTED * 0.5 / ncells
 print(min_mut_af)
 print(max_mut_af)
+print(WANTED)
 
 space = createLattice(rd)
 space[(rd,rd,rd)] = deme()                      #initiate the space with a empty deme in the center site (rd,rd,rd)
@@ -661,6 +672,7 @@ absent6 = muts_all-sets.Set(maf6.keys())
 absent7 = muts_all-sets.Set(maf7.keys())
 absent8 = muts_all-sets.Set(maf8.keys())
 
+# this absent/missingDepth step probably can be removed, considering that we have removed the check on minimum AF in ddPCRProcessing
 maf1 = missingDepth(maf1,absent1,seq_depth)
 maf2 = missingDepth(maf2,absent2,seq_depth)
 maf3 = missingDepth(maf3,absent3,seq_depth)
