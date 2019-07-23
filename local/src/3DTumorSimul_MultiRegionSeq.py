@@ -490,23 +490,21 @@ while not done:
         if mut_count[k] == WANTED:
             print("KRAS\t%d\t%d" % (k, mut_count[k]))
             seen += 1
-        elif mut_count[k] > WANTED:
-            if seen != 0:
-                done = True
-            else:
-                print("KRAS\t%d\t%d" % (k, mut_count[k]))
-                seen += 1
-    WANTED += 1
+    if seen == 0:
+        WANTED += 1
+    else:
+        done = True
                     
                 
     
 ncells = len(muts)
 min_mut_af = nmin * 0.5 / ncells
 max_mut_af = nmax * 0.5 / ncells
-w_mut_af = WANTED * 0.5 / ncells
+w_mut_af = (WANTED-1) * 0.5 / ncells
 print(min_mut_af)
 print(max_mut_af)
 print(WANTED)
+print(w_mut_af)
 
 space = createLattice(rd)
 space[(rd,rd,rd)] = deme()                      #initiate the space with a empty deme in the center site (rd,rd,rd)

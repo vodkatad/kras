@@ -5,12 +5,12 @@ rule simulation:
 	output: maf="simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", info="{n}.siminfo"
 	shell:
 		"""
-			{params.tool} {params.deme} {params.mutr} {params.advr} {params.sel} {wildcards.n} 
+			{params.tool} {params.deme} {params.mutr} {params.advr} {params.sel} {wildcards.n} &> {output.info}
 		"""
 
 
 rule all_simulations:
-	input: expand("simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", n=range(0, NSIM))
+	input: expand("simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", n=range(1, NSIM))
 	shell:
 		"""
 			mkdir -p sims
@@ -26,9 +26,9 @@ rule sim_summary:
 		"""
 			grep -w KRAS {input.info} | cut -f 2 | sort | uniq > {output.sum}.tmp
 			cat {output.sum}.tmp | wc -l | bawk '{{print "starting", $1}}' > {output.sum}
-			tr -s " " "\t" <  {} | cut -f 1 | filter_1col 1 {output}.tmp > {output.sum}.tmp2
+			tr -s " " "\\t" <  {input.maf} | cut -f 1 | filter_1col 1 {output.sum}.tmp > {output.sum}.tmp2
 			cat {output.sum}.tmp2 | wc -l | bawk '{{print "ending", $1}}' >> {output.sum}
-			cut -f 1,2,4,6,8,10,12,14,16,18 > {output.maf}
+			cut -f 1,2,4,6,8,10,12,14,16,18 < {output.sum}.tmp2 > {output.maf}
 			rm {output.sum}.tmp2 {output.sum}.tmp
 			
 		"""
