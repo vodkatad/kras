@@ -18,6 +18,8 @@ rule all_simulations:
 			mv *.siminfo sims
 		"""
 
+rule all_summary:
+    input: expand("{n}.summary", n=range(1, NSIM))
 
 rule sim_summary:
 	input: maf="sims/simulMRS_deme"+NDEME+"_s10percent_8samples_u"+MUT_RATE+"_{n}.txt", info="sims/{n}.siminfo"
